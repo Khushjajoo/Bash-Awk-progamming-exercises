@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Put your code here
+# You may only use the following external programs: ls, echo, awk, cat, grep, sort, wc, bc
+
+keyword=()
+value=()
+i=0
+declare -a totalSum
+
+while read line
+do
+    
+    if [[ $line == *" "* ]]; then
+        keyword[$i]=${line% *} 
+        # take only the last word
+        value[$i]=`echo $line | awk '{print $NF}'`
+        ((i++))
+    else
+        keyword[$i]=`echo $line | awk '{print $1}'`
+        value[$i]=`echo $line | awk '{print $NF}'`
+        ((i++))
+    fi  
+
+
+done < input.txt
+
+i=0
+for files in submissions/*;
+do
+    totalSum[$i]=0
+    for ((j=0; j<${#keyword[@]}; j++))
+    do
+        count=`grep -io "${keyword[$j]}" $files | wc -l`
+        score=`echo "${value[$j]}*$count" | bc -l`
+        totalSum[$i]=`echo "$score+${totalSum[$i]}" | bc -l`
+    done
+    f="${files##*/}"
+    totalSum[$i]=`echo ${totalSum[$i]} | awk '{printf "%g", $0}'`
+    echo ${totalSum[$i]} $f
+    ((i++))
+done | sort -rnk1 | awk '{print $1 " " $2}'
